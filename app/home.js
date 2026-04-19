@@ -8,7 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLang } from '../context/LangContext';
 import { AVATARS } from '../constants/avatars';
 import { Feather, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-
+import EmotionWheel from '../components/EmotionWheel';
 const { width } = Dimensions.get('window');
 
 const COLORS = {
@@ -198,7 +198,13 @@ export default function Home() {
             ))}
           </View>
         </Animated.View>
-
+        {/* ── EMOTION WHEEL ── */}
+        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+          <Text style={[styles.sectionTitle, isRTL && styles.rtl]}>
+            {lang === 'ar' ? 'عجلة المشاعر' : lang === 'en' ? 'Emotion Wheel' : 'Roue des émotions'}
+          </Text>
+          <EmotionWheel lang={lang} isRTL={isRTL} />
+        </Animated.View>
         {/* ── AVATARS ── */}
         <Animated.View style={[{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <View style={styles.sectionHeader}>
