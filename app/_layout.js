@@ -2,14 +2,8 @@ import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { LangProvider, useLang } from '../context/LangContext';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { COLORS } from '../constants/colors';
 
-const COLORS = {
-  accent: '#d4a373',
-  muted: '#ccd5ae',
-  text: '#5c4a2a',
-  white: '#ffffff',
-  bg: '#fefae0',
-};
 
 function TabBarIcon({ name, color, size }) {
   return <Feather name={name} size={size} color={color} />;
@@ -22,11 +16,11 @@ function InnerLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.accent,
-        tabBarInactiveTintColor: COLORS.muted,
+        tabBarActiveTintColor: '#6b7c4b',
+        tabBarInactiveTintColor: '#b0a98e',
         tabBarStyle: {
-          backgroundColor: COLORS.white,
-          borderTopColor: COLORS.muted,
+          backgroundColor: '#faf8f2',
+          borderTopColor: '#e0d9c8',
           borderTopWidth: 1,
           height: 62,
           paddingBottom: 8,
@@ -35,6 +29,7 @@ function InnerLayout() {
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '700',
+          color: COLORS.text,
         },
       }}
     >

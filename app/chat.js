@@ -237,7 +237,7 @@ export default function Chat() {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={90}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <FlatList
           ref={flatListRef}
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14,
+    paddingHorizontal: 20, paddingTop: 30, paddingBottom: 15,
     backgroundColor: COLORS.white,
     borderBottomWidth: 1, borderBottomColor: COLORS.border,
     elevation: 2,
@@ -334,9 +334,12 @@ const styles = StyleSheet.create({
 
   inputRow: {
     flexDirection: 'row', alignItems: 'flex-end',
-    paddingHorizontal: 16, paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    paddingBottom: 12,
     backgroundColor: COLORS.white,
-    borderTopWidth: 1, borderTopColor: COLORS.border, gap: 10,
+    borderTopWidth: 1, borderTopColor: COLORS.border,
+    gap: 10,
   },
   input: {
     flex: 1, backgroundColor: COLORS.soft,
