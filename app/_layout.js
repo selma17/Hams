@@ -71,6 +71,13 @@ function InnerLayout() {
           tabBarActiveTintColor: 'red',
         }}
       />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          tabBarLabel: lang === 'ar' ? 'إعدادات' : lang === 'en' ? 'Settings' : 'Réglages',
+          tabBarIcon: ({ color, size }) => <TabBarIcon name="settings" color={color} size={size} />,
+        }}
+      />
     </Tabs>
   );
 }

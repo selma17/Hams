@@ -8,19 +8,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLang } from '../context/LangContext';
 import { AVATARS } from '../constants/avatars';
 import { Feather, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../constants/colors';
 import EmotionWheel from '../components/EmotionWheel';
 const { width } = Dimensions.get('window');
 
-const COLORS = {
-  bg: '#fefae0',
-  card: '#faedcd',
-  accent: '#d4a373',
-  soft: '#e9edc9',
-  muted: '#ccd5ae',
-  text: '#5c4a2a',
-  subtext: '#8a7560',
-  white: '#ffffff',
-};
 
 const QUOTES = {
   fr: [
@@ -140,16 +131,20 @@ export default function Home() {
               <View style={styles.timeIconWrap}>{getTimeIcon()}</View>
               <View>
                 <Text style={[styles.greeting, isRTL && styles.rtl]}>
-                  {getTimeGreeting()}, {userName}
+                  {getTimeGreeting()}, <Text style={styles.greetingName}>{userName}</Text>
                 </Text>
                 <Text style={[styles.howAreYou, isRTL && styles.rtl]}>
                   {t.howAreYou}
                 </Text>
               </View>
             </View>
-            <View style={styles.appBadge}>
+            <TouchableOpacity
+              style={styles.appBadge}
+              onPress={() => router.push('/settings')}
+            >
               <Text style={styles.appBadgeText}>هَمْس</Text>
-            </View>
+              <Feather name="settings" size={12} color={COLORS.white} style={{ marginLeft: 4 }} />
+            </TouchableOpacity>
           </View>
         </Animated.View>
 
@@ -380,4 +375,8 @@ const styles = StyleSheet.create({
   actionSub: { fontSize: 11, color: COLORS.subtext, lineHeight: 16 },
 
   rtl: { textAlign: 'right' },
+  greetingName: {
+    color: COLORS.accent,
+    fontWeight: '900',
+  },
 });

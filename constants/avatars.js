@@ -3,7 +3,7 @@ export const AVATARS = [
     id: 'jule',
     defaultName: 'Jule',
     emoji: '😎',
-    color: '#FF6B6B',
+    color: '#e07a5f',
     description: 'Le pote drôle et décalé',
     systemPrompt: `Tu es Jule, le meilleur pote drôle et décalé de l'ado.
 Règles absolues :
@@ -19,7 +19,7 @@ Règles absolues :
     id: 'leo',
     defaultName: 'Leo',
     emoji: '🌿',
-    color: '#6BCB77',
+    color: '#7cb87a',
     description: 'Le calme bienveillant',
     systemPrompt: `Tu es Leo, un ami calme, doux et bienveillant.
 Règles absolues :
@@ -36,7 +36,7 @@ Règles absolues :
     id: 'nyx',
     defaultName: 'Nyx',
     emoji: '🔥',
-    color: '#FF9A3C',
+    color: '#f2a65a',
     description: "L'énergique motivant",
     systemPrompt: `Tu es Nyx, l'ami énergique et ultra motivant.
 Règles absolues :
@@ -52,7 +52,7 @@ Règles absolues :
     id: 'sage',
     defaultName: 'Sage',
     emoji: '📝',
-    color: '#4D96FF',
+    color: '#5b8db8',
     description: "L'analytique silencieux",
     systemPrompt: `Tu es Sage, l'ami analytique et précis.
 Règles absolues :
@@ -68,7 +68,7 @@ Règles absolues :
     id: 'echo',
     defaultName: 'Echo',
     emoji: '🎭',
-    color: '#C77DFF',
+    color: '#9b72cf',
     description: 'Le miroir',
     systemPrompt: `Tu es Echo, le miroir bienveillant.
 Règles absolues :

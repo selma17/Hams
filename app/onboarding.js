@@ -8,16 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AVATARS } from '../constants/avatars';
 import { translations } from '../constants/translations';
 import { useLang } from '../context/LangContext';
-
-const COLORS = {
-  bg: '#fefae0',
-  card: '#faedcd',
-  accent: '#d4a373',
-  soft: '#e9edc9',
-  muted: '#ccd5ae',
-  text: '#5c4a2a',
-  subtext: '#8a7560',
-};
+import { COLORS } from '../constants/colors';
 
 const LANGUAGES = [
   { code: 'fr', label: 'Français', flag: '🇫🇷' },

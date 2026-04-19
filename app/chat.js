@@ -1,6 +1,7 @@
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  FlatList, TextInput, KeyboardAvoidingView, Platform, Animated
+  FlatList, TextInput, KeyboardAvoidingView, Platform,
+  Animated, Alert
 } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -9,19 +10,7 @@ import { useLang } from '../context/LangContext';
 import { AVATARS } from '../constants/avatars';
 import { sendMessage } from '../services/groq';
 import { Feather, Ionicons } from '@expo/vector-icons';
-
-const COLORS = {
-  bg: '#fefae0',
-  card: '#faedcd',
-  accent: '#d4a373',
-  soft: '#e9edc9',
-  muted: '#ccd5ae',
-  text: '#5c4a2a',
-  subtext: '#8a7560',
-  white: '#ffffff',
-  userBubble: '#d4a373',
-  botBubble: '#faedcd',
-};
+import { COLORS } from '../constants/colors';
 
 const AVATAR_ICONS = {
   jule: { name: 'zap', lib: 'feather' },
@@ -86,43 +75,53 @@ export default function Chat() {
   const flatListRef = useRef(null);
 
   const avatar = AVATARS.find(a => a.id === avatarId) || AVATARS[0];
+  const STORAGE_KEY = `chat_history_${avatarId}`;
 
   useEffect(() => {
     const load = async () => {
       const names = await AsyncStorage.getItem('avatarNames');
       const userName = await AsyncStorage.getItem('userName');
+      const savedHistory = await AsyncStorage.getItem(STORAGE_KEY);
+
+      let name = avatar.defaultName;
       if (names) {
         const parsed = JSON.parse(names);
-        setAvatarName(parsed[avatarId] || avatar.defaultName);
+        name = parsed[avatarId] || avatar.defaultName;
+        setAvatarName(name);
       }
 
-      // Welcome message
-      const welcomes = {
-        fr: {
-          jule: `Yoo ${userName || ''} ! C'est moi, ${avatarName || avatar.defaultName} 😎 Qu'est-ce qui se passe ?`,
-          leo: `Bonjour ${userName || ''} 🌿 Je suis là. Prends ton temps, dis-moi ce que tu ressens.`,
-          nyx: `Hey ${userName || ''} ! 🔥 Prêt·e à tout déchirer aujourd'hui ? Dis-moi tout !`,
-          sage: `${userName || ''}. Je t'écoute. Une pensée à la fois.`,
-          echo: `Bonjour ${userName || ''}. Je suis là pour t'aider à t'entendre toi-même.`,
-        },
-        en: {
-          jule: `Yoo ${userName || ''} ! It's me 😎 What's going on?`,
-          leo: `Hello ${userName || ''} 🌿 I'm here. Take your time, tell me how you feel.`,
-          nyx: `Hey ${userName || ''} ! 🔥 Ready to crush it today? Tell me everything!`,
-          sage: `${userName || ''}. I'm listening. One thought at a time.`,
-          echo: `Hello ${userName || ''}. I'm here to help you hear yourself.`,
-        },
-        ar: {
-          jule: `هيا ${userName || ''} ! أنا هنا 😎 ماذا يحدث؟`,
-          leo: `مرحباً ${userName || ''} 🌿 أنا هنا. خذ وقتك، أخبرني كيف تشعر.`,
-          nyx: `هيا ${userName || ''} ! 🔥 مستعد اليوم؟ أخبرني كل شيء!`,
-          sage: `${userName || ''}. أنا أستمع. فكرة واحدة في كل مرة.`,
-          echo: `مرحباً ${userName || ''}. أنا هنا لمساعدتك على سماع نفسك.`,
-        },
-      };
-
-      const welcomeText = welcomes[lang]?.[avatarId] || welcomes.fr[avatarId];
-      setMessages([{ id: '0', role: 'assistant', text: welcomeText }]);
+      // Load saved history or show welcome message
+      if (savedHistory) {
+        setMessages(JSON.parse(savedHistory));
+      } else {
+        const welcomes = {
+          fr: {
+            jule: `Yoo ${userName || ''} ! C'est moi 😎 Qu'est-ce qui se passe ?`,
+            leo: `Bonjour ${userName || ''} 🌿 Je suis là. Prends ton temps.`,
+            nyx: `Hey ${userName || ''} ! 🔥 Prêt·e à tout déchirer aujourd'hui ?`,
+            sage: `${userName || ''}. Je t'écoute. Une pensée à la fois.`,
+            echo: `Bonjour ${userName || ''}. Je suis là pour t'aider à t'entendre.`,
+          },
+          en: {
+            jule: `Yoo ${userName || ''} ! It's me 😎 What's going on?`,
+            leo: `Hello ${userName || ''} 🌿 I'm here. Take your time.`,
+            nyx: `Hey ${userName || ''} ! 🔥 Ready to crush it today?`,
+            sage: `${userName || ''}. I'm listening. One thought at a time.`,
+            echo: `Hello ${userName || ''}. I'm here to help you hear yourself.`,
+          },
+          ar: {
+            jule: `هيا ${userName || ''} ! أنا هنا 😎 ماذا يحدث؟`,
+            leo: `مرحباً ${userName || ''} 🌿 أنا هنا. خذ وقتك.`,
+            nyx: `هيا ${userName || ''} ! 🔥 مستعد اليوم؟`,
+            sage: `${userName || ''}. أنا أستمع. فكرة واحدة في كل مرة.`,
+            echo: `مرحباً ${userName || ''}. أنا هنا لمساعدتك على سماع نفسك.`,
+          },
+        };
+        const welcomeText = welcomes[lang]?.[avatarId] || welcomes.fr[avatarId];
+        const welcome = [{ id: '0', role: 'assistant', text: welcomeText }];
+        setMessages(welcome);
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(welcome));
+      }
     };
     load();
   }, [avatarId, lang]);
@@ -135,26 +134,48 @@ export default function Chat() {
     setInput('');
     setIsTyping(true);
 
+    // Save immediately
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newMessages));
+
     try {
-      const history = newMessages.map(m => ({
-        role: m.role,
-        content: m.text,
-      }));
+      const history = newMessages.map(m => ({ role: m.role, content: m.text }));
       const reply = await sendMessage(avatar.systemPrompt, history);
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        text: reply,
-      }]);
+      const botMsg = { id: (Date.now() + 1).toString(), role: 'assistant', text: reply };
+      const updated = [...newMessages, botMsg];
+      setMessages(updated);
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     } catch (e) {
-      setMessages(prev => [...prev, {
+      const errMsg = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        text: lang === 'ar' ? 'عذراً، حدث خطأ. حاول مجدداً.' : lang === 'en' ? 'Sorry, something went wrong.' : 'Désolé, une erreur s\'est produite.',
-      }]);
+        text: lang === 'ar' ? 'عذراً، حدث خطأ.' : lang === 'en' ? 'Sorry, something went wrong.' : 'Désolé, une erreur s\'est produite.',
+      };
+      const updated = [...newMessages, errMsg];
+      setMessages(updated);
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     } finally {
       setIsTyping(false);
     }
+  };
+
+  const handleClearHistory = () => {
+    Alert.alert(
+      lang === 'ar' ? 'مسح المحادثة' : lang === 'en' ? 'Clear conversation' : 'Effacer la conversation',
+      lang === 'ar' ? 'هل أنت متأكد؟' : lang === 'en' ? 'Are you sure?' : 'Tu es sûr·e ?',
+      [
+        { text: lang === 'ar' ? 'إلغاء' : lang === 'en' ? 'Cancel' : 'Annuler', style: 'cancel' },
+        {
+          text: lang === 'ar' ? 'مسح' : lang === 'en' ? 'Clear' : 'Effacer',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.removeItem(STORAGE_KEY);
+            const welcome = [{ id: '0', role: 'assistant', text: messages[0]?.text || '' }];
+            setMessages(welcome);
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(welcome));
+          },
+        },
+      ]
+    );
   };
 
   const renderMessage = ({ item }) => {
@@ -169,7 +190,6 @@ export default function Chat() {
         <View style={[
           styles.bubble,
           isUser ? [styles.userBubble, { backgroundColor: avatar.color }] : styles.botBubble,
-          isRTL && { alignItems: 'flex-end' }
         ]}>
           <Text style={[
             styles.bubbleText,
@@ -188,9 +208,13 @@ export default function Chat() {
 
       {/* ── HEADER ── */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity
+          onPress={() => router.replace('/home')}
+          style={styles.backBtn}
+        >
           <Feather name="arrow-left" size={20} color={COLORS.text} />
         </TouchableOpacity>
+
         <View style={styles.headerCenter}>
           <View style={[styles.headerIcon, { backgroundColor: avatar.color + '25' }]}>
             <AvatarIcon avatarId={avatarId} size={20} color={avatar.color} />
@@ -202,7 +226,11 @@ export default function Chat() {
             </Text>
           </View>
         </View>
-        <View style={{ width: 36 }} />
+
+        {/* Clear button */}
+        <TouchableOpacity onPress={handleClearHistory} style={styles.clearBtn}>
+          <Feather name="trash-2" size={18} color={COLORS.subtext} />
+        </TouchableOpacity>
       </View>
 
       {/* ── MESSAGES ── */}
@@ -238,7 +266,7 @@ export default function Chat() {
             value={input}
             onChangeText={setInput}
             placeholder={t.typeMessage}
-            placeholderTextColor={COLORS.subtext}
+            placeholderTextColor={COLORS.muted}
             multiline
             maxLength={500}
             textAlign={isRTL ? 'right' : 'left'}
@@ -259,16 +287,13 @@ export default function Chat() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
 
-  // Header
   header: {
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 14,
     backgroundColor: COLORS.white,
-    borderBottomWidth: 1, borderBottomColor: COLORS.muted,
+    borderBottomWidth: 1, borderBottomColor: COLORS.border,
     elevation: 2,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06, shadowRadius: 4,
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 18,
@@ -282,43 +307,36 @@ const styles = StyleSheet.create({
   },
   headerName: { fontSize: 15, fontWeight: '700', color: COLORS.text },
   headerStatus: { fontSize: 11, color: '#7bc67e', fontWeight: '600', marginTop: 1 },
+  clearBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: COLORS.soft,
+    justifyContent: 'center', alignItems: 'center',
+  },
 
-  // Messages
   messagesList: { padding: 16, paddingBottom: 8 },
   msgRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 12 },
   msgRowUser: { justifyContent: 'flex-end' },
   msgRowBot: { justifyContent: 'flex-start' },
   avatarDot: {
     width: 28, height: 28, borderRadius: 14,
-    justifyContent: 'center', alignItems: 'center',
-    marginRight: 8,
+    justifyContent: 'center', alignItems: 'center', marginRight: 8,
   },
-  bubble: {
-    maxWidth: '75%', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10,
-  },
-  userBubble: {
-    borderBottomRightRadius: 4,
-    elevation: 2,
-    shadowColor: COLORS.accent,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2, shadowRadius: 4,
-  },
+  bubble: { maxWidth: '75%', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10 },
+  userBubble: { borderBottomRightRadius: 4, elevation: 2 },
   botBubble: {
-    backgroundColor: COLORS.botBubble,
-    borderBottomLeftRadius: 4,
-    elevation: 1,
+    backgroundColor: COLORS.white,
+    borderBottomLeftRadius: 4, elevation: 1,
+    borderWidth: 1, borderColor: COLORS.border,
   },
   bubbleText: { fontSize: 14, lineHeight: 22 },
   userBubbleText: { color: COLORS.white },
   botBubbleText: { color: COLORS.text },
 
-  // Input
   inputRow: {
     flexDirection: 'row', alignItems: 'flex-end',
     paddingHorizontal: 16, paddingVertical: 12,
     backgroundColor: COLORS.white,
-    borderTopWidth: 1, borderTopColor: COLORS.muted,
-    gap: 10,
+    borderTopWidth: 1, borderTopColor: COLORS.border, gap: 10,
   },
   input: {
     flex: 1, backgroundColor: COLORS.soft,
@@ -328,9 +346,7 @@ const styles = StyleSheet.create({
   },
   sendBtn: {
     width: 44, height: 44, borderRadius: 22,
-    justifyContent: 'center', alignItems: 'center',
-    elevation: 3,
+    justifyContent: 'center', alignItems: 'center', elevation: 3,
   },
-
   rtl: { textAlign: 'right' },
 });

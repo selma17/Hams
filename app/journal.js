@@ -6,17 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLang } from '../context/LangContext';
 import { Feather } from '@expo/vector-icons';
-
-const COLORS = {
-  bg: '#fefae0',
-  card: '#faedcd',
-  accent: '#d4a373',
-  soft: '#e9edc9',
-  muted: '#ccd5ae',
-  text: '#5c4a2a',
-  subtext: '#8a7560',
-  white: '#ffffff',
-};
+import { COLORS } from '../constants/colors';
 
 const MOOD_OPTIONS = [
   { icon: 'frown', label: { fr: 'Triste', en: 'Sad', ar: 'حزين' }, color: '#a8c5da', value: 1 },
